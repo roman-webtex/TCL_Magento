@@ -1,0 +1,22 @@
+--- /home/roman/work/My/TCL_Magento/var/backup/20200702-1420-Category.php	2020-07-02 14:13:20.762087165 +0300
++++ /home/roman/work/docker/ricambi_m2/compose/src/vendor/magento/module-catalog/Model/Category.php	2020-07-02 14:13:20.762087165 +0300
+@@ -1,4 +1,3 @@
+-/home/roman/work/docker/ricambi_m2/compose/src/vendor/magento/module-catalog/Model/Category.php
+ <?php
+ /**
+  * Copyright © Magento, Inc. All rights reserved.
+@@ -301,9 +300,6 @@ class Category extends \Magento\Catalog\
+         } else {
+             $this->_init(\Magento\Catalog\Model\ResourceModel\Category::class);
+         }
+-        
+-        тут я добавлял текст
+-        
+     }
+ 
+     /**
+@@ -1503,3 +1499,4 @@ class Category extends \Magento\Catalog\
+ }
+ 
+ 
++

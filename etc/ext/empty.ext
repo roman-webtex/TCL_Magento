@@ -1,0 +1,11 @@
+# an empty extension highlighting file
+set keywords(function) {}
+set keywords(command) {}
+set keywords(string) {}
+set keywords(text) {}
+set keywords(comment) {}
+set keywords(tag) {}
+set keywords(constant) {}
+set keywords(brace) {}
+set keywords(control) {}
+set keywords(variable) {}
