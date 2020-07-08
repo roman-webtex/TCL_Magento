@@ -15,6 +15,7 @@ namespace eval system::config {
 	    foreach { key value } $select {
 		dict set config $key $value
 	    }
+	    set ::system::magento::di_fields_type [::system::magento::get_db_field_types]
 	} else {
 	    dict set config magento_dir ""
 	    dict set config session {}

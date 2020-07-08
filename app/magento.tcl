@@ -2,6 +2,8 @@
 
 namespace eval system::magento {
 
+    variable di_fields_type
+
     proc admin_create {} {
 	dict set admin_config admin-firstname "Admin"
 	dict set admin_config admin-lastname "Magento"
@@ -172,9 +174,237 @@ namespace eval system::magento {
     }
 
     proc add_model {} {
-	dict set model name ""
-	dict set model fieldset {}
-	set result [::system::windows::get_model_window]
-	puts $result
+	::system::windows::get_model_window
+    }
+
+    proc get_db_field_types {} {
+	set result {}
+	set di_file [::system::config::get_magento_dir]/app/etc/di.xml
+	set file_data [::system::utils::get_file_content $di_file]
+
+	set doc [dom parse $file_data]
+	set root [$doc documentElement]
+	set node [$root selectNodes {/config/type/arguments/argument[@name='typeFactories']}]
+	set child_nodes [$node selectNodes item]
+
+	foreach item $child_nodes {
+	    lappend result [lindex [split [lindex [$item selectNodes attribute::name] 0] " "] 1]
+	}
+
+	return $result
+    }
+
+    proc create_comment {model vendor module} {
+	return "\n/** \n * @category [regsub -- {_Model.*$} $model {}]\n * @author $vendor Team\n * @copyright Copyright © [clock format [clock seconds] -format %Y ] $vendor \n * @package [regsub -- {_Model.*$} $model {}]\n */ \n"
+    }
+
+    proc create_model {m_name table} {
+	global field_no
+	global fields_list
+
+	::system::windows::add_progress
+	
+	set name [regsub -all -- _ $m_name /]
+	set full_name [::system::config::get_magento_dir]/app/code/$name.php
+	set model_file_name [file tail $full_name]
+	set model_template [string range $model_file_name 0 end-4]
+	set created_name [::system::config::get_magento_dir]/app/code
+	set vendor [lindex [split [regsub -- {/Model.*$} $name ""] "/"] 0]
+	set module [lindex [split [regsub -- {/Model.*$} $name ""] "/"] 1]
+	set comment_text [create_comment $m_name $vendor $module]
+	set module_namespace $vendor\\$module
+
+	set module_dir [::system::config::get_magento_dir]/app/code/[regsub -- {/Model.*$} $name ""]
+
+	set model_interface $module_dir/Api/Data/${model_template}Interface.php
+	set model_class $module_dir/Model/$model_template.php
+	set model_repository_interface $module_dir/Api/${model_template}RepositoryInterface.php
+	set model_repository $module_dir/Model/${model_template}Repository.php
+	set resource_model $module_dir/Model/ResourceModel/$model_template.php
+	set model_collection $module_dir/Model/ResourceModel/$model_template/Collection.php
+	
+	foreach dir [split $name "/"] {
+	    append created_name /$dir
+	    if {[file exists $created_name] == 0} {
+		exec mkdir $created_name
+	    }
+	}
+
+
+	if {[file exists $module_dir/etc] == 0} {
+	    exec mkdir $module_dir/etc
+	}
+
+	if {[file exists $module_dir/Api] == 0} {
+	    exec mkdir $module_dir/Api
+	    exec mkdir $module_dir/Api/Data
+	}
+
+	if {[file exists $module_dir/Model/ResourceModel] == 0} {
+	    exec mkdir $module_dir/Model/ResourceModel
+	    exec mkdir $module_dir/Model/ResourceModel/$model_template
+	}
+
+	# schema xml
+	if {[file exists $module_dir/etc/db_schema.xml] == 0} {
+	    set doc [dom createDocument schema]
+	    set root [$doc documentElement]
+	    set comment [$doc createComment $comment_text]
+	    $doc insertBefore $comment $root
+	    set schema [$root selectNodes {/schema}]
+	    $schema setAttribute xsi::noNamespaceSchemaLocation "urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd"
+	    set table_node [$doc createElement table]
+	    $table_node setAttribute name $table resource "default" engine "innodb"
+	    $root appendChild $table_node
+	    set fp [open $module_dir/etc/db_schema.xml w]
+	    puts $fp [$doc asXML -xmlDeclaration 1]
+	    close $fp
+	}
+
+	set file_data [::system::utils::get_file_content $module_dir/etc/db_schema.xml]
+	set doc [dom parse $file_data]
+	set root [$doc documentElement]
+	set node_name [append "" /schema/table "\[" @name=' $table "'\]" ]
+	set node [$root selectNodes $node_name]
+
+	if {[$node hasChildNodes] == 1} {
+	    foreach children [$node childNodes] {
+		$node removeChild $children
+	    }
+	}
+
+	set item 0
+	while {$item <= $field_no} {
+	    if {$fields_list($item.name) != "" } {
+		set field_node [$doc createElement column]
+		$field_node setAttribute xsi:type "$fields_list($item.type)" name "$fields_list($item.name)" default "$fields_list($item.default)"
+
+		if {$fields_list($item.type) == "int" || $fields_list($item.type) == "smallint"} {
+		    $field_node setAttribute padding "$fields_list($item.size)"
+		} else {
+		    $field_node setAttribute length "$fields_list($item.size)"
+		}
+
+		if {$fields_list($item.null) == 0} {
+		    $field_node setAttribute nullable "true"
+		} else {
+		    $field_node setAttribute nullable "false"		    
+		}
+
+		if {$item == 0} {
+		    $field_node setAttribute identity "true"
+		    set fields_list(identity) $fields_list($item.name)
+		}
+		
+		$node appendChild $field_node
+	    }
+	    incr item
+	}
+
+	set fp [open $module_dir/etc/db_schema.xml w]
+	puts $fp [$doc asXML -xmlDeclaration 1]
+	close $fp
+
+	# schema json
+	if {[file exists $module_dir/etc/db_schema_whitelist.json] == 0} {
+	    set fp [open $module_dir/etc/db_schema_whitelist.json w]
+	    puts $fp "{}"
+	    close $fp
+	}
+
+	set file_data [::system::utils::get_file_content $module_dir/etc/db_schema_whitelist.json]
+	set doc [dom parse -json $file_data]
+	set node [$doc selectNodes "//$table" ]
+	if {$node != ""} {
+	    $node delete
+	}
+	set table_node [$doc createElement $table]
+	set column_node [$doc createElement "column"]
+	set item 0
+	while {$item <= $field_no} {
+	    if {$fields_list($item.name) != ""} {
+		set column [$doc createElement $fields_list($item.name)]
+		$column appendChild [$doc createTextNode "true"]
+		$column_node appendChild $column
+	    }
+	    incr item
+	}
+	$table_node appendChild $column_node
+	$doc appendChild $table_node
+
+	set fp [open $module_dir/etc/db_schema_whitelist.json w]
+	puts $fp [$doc asJSON -indent 4]
+	close $fp
+
+	# Model Interface
+	set fp [open $model_interface w]
+	puts $fp "<?php$comment_text \nnamespace $vendor\\$module\\Api\\Data; \n\ninterface ${model_template}Interface \n\{"
+	
+	set item 0
+	set const ""
+	set body ""
+	while {$item <= $field_no} {
+	    set field_name $fields_list($item.name)
+	    set camel_case [get_camel_case $field_name]
+
+	    append const "\n" "\tconst [string toupper $field_name] = '$field_name';"
+	    append body "\n" "\tpublic function get${camel_case}();\n\n\tpublic function set${camel_case}(\$$field_name);\n"
+	    incr item
+	}
+	puts $fp $const
+	puts $fp \n$body\}
+	close $fp
+
+	# model repository interface
+	set fp [open $model_repository_interface w]
+	set tpl_data [::system::utils::get_file_content $::load_path/etc/templates/model_repository_interface.tm2]
+	eval "puts $fp \"${tpl_data}\""
+	close $fp
+
+	# model class
+	set fp [open $model_class w]
+	set tpl_data [::system::utils::get_file_content $::load_path/etc/templates/model_template.tm2]
+	eval "puts $fp \"${tpl_data}\""
+
+	set item 0
+	while {$item <= $field_no} {
+	    set field_name $fields_list($item.name)
+	    set camel_case [get_camel_case $field_name]
+	    puts $fp "\tpublic function get${camel_case}()\n\t\{\n\t\treturn \$this->getData(${model_template}Interface::[string toupper $field_name]);\n\t\}\n"
+	    puts $fp "\tpublic function set${camel_case}(\$$field_name)\n\t\{\n\t\treturn \$this->setData(${model_template}Interface::[string toupper $field_name], \$$field_name);\n\t\}\n"
+	    incr item
+	}
+
+	set camel_case [get_camel_case $fields_list(identity)]
+	puts $fp "\tpublic function getIdentities()\n\t\{\n\t\treturn \['[string tolower ${vendor}_${module}_$model_template]_' . \$this->get${camel_case}()\];\n\t\}\n\}"
+	close $fp
+
+	# model repository
+	set fp [open $model_repository w]
+	set tpl_data [::system::utils::get_file_content $::load_path/etc/templates/model_repository.tm2]
+	eval "puts $fp \"${tpl_data}\""
+	close $fp
+
+	# resource model
+	set fp [open $resource_model w]
+	set tpl_data [::system::utils::get_file_content $::load_path/etc/templates/resource_model.tm2]
+	eval "puts $fp \"${tpl_data}\""
+	close $fp
+
+	# collection
+	set fp [open $model_collection w]
+	set tpl_data [::system::utils::get_file_content $::load_path/etc/templates/model_collection.tm2]
+	eval "puts $fp \"${tpl_data}\""
+	close $fp
+
+	::system::windows::remove_progress
+    }
+
+    proc get_camel_case {var} {
+	set result ""
+	foreach word [split $var "_"] {
+	    append result "" [string totitle $word]
+	}
+	return $result
     }
 }

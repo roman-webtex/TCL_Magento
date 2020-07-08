@@ -1,0 +1,123 @@
+<?php$comment_text
+namespace $vendor\\$module\\Model\\ResourceModel;
+
+use Magento\\Framework\\Model\\AbstractModel;
+
+class $model_template extends \\Magento\\Framework\\Model\\ResourceModel\\Db\\AbstractDb
+\{
+
+    /**
+     * Core event manager proxy
+     *
+     * @var \\Magento\\Framework\\Event\\ManagerInterface
+     */
+    protected \$_eventManager = null;
+
+    /**
+     * @var \\Magento\\Eav\\Model\\Config
+     */
+    protected \$_eavConfig;
+
+    /**
+     * @var \\Magento\\Store\\Model\\StoreManagerInterface
+     */
+    protected \$_storeManager;
+
+    /**
+     * @var \\Magento\\Framework\\EntityManager\\EntityManager
+     */
+    protected \$entityManager;
+
+    /**
+     * @param \\Magento\\Framework\\Model\\ResourceModel\\Db\\Context \$context
+     * @param \\Magento\\Store\\Model\\StoreManagerInterface \$storeManager
+     * @param \\Magento\\Eav\\Model\\Config \$eavConfig
+     * @param \\Magento\\Framework\\Event\\ManagerInterface \$eventManager
+     * @param null \$connectionName
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+     */
+    public function __construct(
+        \\Magento\\Framework\\Model\\ResourceModel\\Db\\Context \$context,
+        \\Magento\\Store\\Model\\StoreManagerInterface \$storeManager,
+        \\Magento\\Eav\\Model\\Config \$eavConfig,
+        \\Magento\\Framework\\Event\\ManagerInterface \$eventManager,
+        \$connectionName = null
+    ) \{
+        \$this->_storeManager = \$storeManager;
+        \$this->_eavConfig    = \$eavConfig;
+        \$this->_eventManager = \$eventManager;
+        parent::__construct(\$context, \$connectionName);
+    \}
+
+    /**
+     * Initialize main table and table id field
+     *
+     * @return void
+     * @codeCoverageIgnore
+     */
+    protected function _construct()
+    \{
+        \$this->_init('$table', '$fields_list(identity)');
+    \}
+
+    protected function _afterDelete(\\Magento\\Framework\\Model\\AbstractModel \$model)
+    \{
+        \$connection = \$this->getConnection();
+        \$connection->delete(
+            \$this->getTable('$table'),
+            \['$fields_list(identity)=?' => \$model->get[get_camel_case $fields_list(identity)]()\]
+        );
+        return parent::_afterDelete(\$model);
+    \}
+
+    /**
+     * @param \\Magento\\Framework\\Model\\AbstractModel \$object
+     * @param mixed \$value
+     * @param string \$field
+     * @return \$this
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function load(\\Magento\\Framework\\Model\\AbstractModel \$object, \$value, \$field = null)
+    \{
+        \$this->getEntityManager()->load(\$object, \$value);
+        return \$this;
+    \}
+
+    /**
+     * @param AbstractModel \$object
+     * @return \$this
+     * @throws \\Exception
+     */
+    public function save(\\Magento\\Framework\\Model\\AbstractModel \$object)
+    \{
+        \$this->getEntityManager()->save(\$object, \$object->getData());
+        return \$this;
+    \}
+
+    /**
+     * Delete the object
+     *
+     * @param \\Magento\\Framework\\Model\\AbstractModel \$object
+     * @return \$this
+     * @throws \\Exception
+     */
+    public function delete(AbstractModel \$object)
+    \{
+        \$this->getEntityManager()->delete(\$object);
+        return \$this;
+    \}
+
+    /**
+     * @return \\Magento\\Framework\\EntityManager\\EntityManager
+     * @deprecated 100.1.0
+     */
+    private function getEntityManager()
+    \{
+        if (null === \$this->entityManager) \{
+            \$this->entityManager = \\Magento\\Framework\\App\\ObjectManager::getInstance()
+                                    ->create(\\Magento\\Framework\\EntityManager\\EntityManager::class);
+        \}
+        return \$this->entityManager;
+    \}
+\}
+

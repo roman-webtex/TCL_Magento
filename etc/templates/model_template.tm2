@@ -1,0 +1,38 @@
+<?php$comment_text
+namespace $vendor\\$module\\Model;
+
+use Magento\\Framework\\DataObject\\IdentityInterface;
+use $vendor\\$module\\Api\\Data\\${model_template}Interface;
+use $vendor\\$module\\Model\\ResourceModel\\$model_template as ${model_template}ResourceModel;
+
+class $model_template extends \\Magento\\Framework\\Model\\AbstractModel implements IdentityInterface, ${model_template}Interface
+\{
+
+    protected \$_eventPrefix = '[string tolower ${vendor}_${module}_$model_template]';
+    protected \$_eventObject = '[string tolower ${vendor}_${module}_$model_template]';
+    protected \$[string tolower $model_template]ResourceModel;
+
+    public function __construct(
+        \\Magento\\Framework\\Model\\Context \$context,
+        \\Magento\\Framework\\Registry \$registry,
+        ${model_template}ResourceModel \$[string tolower $model_template]ResourceModel,
+        \\Magento\\Framework\\Model\\ResourceModel\\AbstractResource \$resource = null,
+        \\Magento\\Framework\\Data\\Collection\\AbstractDb \$resourceCollection = null,
+        array \$data = \[\]
+    ) \{
+        \$this->[string tolower $model_template]ResourceModel = \$[string tolower $model_template]ResourceModel;
+        parent::__construct(
+            \$context,
+            \$registry,
+            \$resource,
+            \$resourceCollection,
+            \$data
+       );
+    }
+
+    protected function _construct()
+    \{
+        parent::_construct();
+        \$this->_init(${model_template}ResourceModel::class);
+        \$this->setIdFieldName('$fields_list(identity)');
+    \}

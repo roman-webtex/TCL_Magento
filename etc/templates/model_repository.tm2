@@ -1,0 +1,101 @@
+<?php$comment_text
+namespace $vendor\\$module\\Model;
+
+use $vendor\\$module\\Api\\Data\\${model_template}RepositoryInterface;
+use Magento\\Framework\\Exception\\CouldNotDeleteException;
+use Magento\\Framework\\Exception\\CouldNotSaveException;
+use Magento\\Framework\\Exception\\NoSuchEntityException;
+use Magento\\Framework\\Exception\\ValidatorException;
+
+class ${model_template}Repository implements \\$vendor\\$module\\Api\\${model_template}RepositoryInterface
+\{
+    /**
+     * @var ResourceModel\\$model_template
+     */
+    protected \$[string tolower $model_template]Resource;
+
+    /**
+     * @var [string tolower $model_template]Factory
+     */
+    protected \$[string tolower $model_template]Factory;
+
+    /**
+     * @param ResourceModel\\$model_template \$[string tolower $model_template]Resource
+     * @param ${model_template}Factory \$[string tolower $model_template]Factory
+     */
+    public function __construct(
+        \\$vendor\\$module\\Model\\ResourceModel\\$model_template \$[string tolower $model_template]Resource,
+        ${model_template}Factory \$[string tolower $model_template]Factory
+    ) \{
+        \$this->[string tolower $model_template]Resource = \$[string tolower $model_template]Resource;
+        \$this->[string tolower $model_template]Factory  = \$[string tolower $model_template]Factory;
+    \}
+
+    /**
+     * \{@inheritdoc\}
+     */
+    public function save(${model_template}Interface \$model)
+    \{
+        if (\$model->get[get_camel_case $fields_list(identity)]()) \{
+            \$model = \$this->get(\$model->get[get_camel_case $fields_list(identity)]())->addData(\$model->getData());
+        \}
+
+        try \{
+            \$this->[string tolower $model_template]Resource->save(\$model);
+            unset(\$this->data\[\$model->get[get_camel_case $fields_list(identity)]()\]);
+        \} catch (ValidatorException \$e) \{
+            throw new CouldNotSaveException(__(\$e->getMessage()));
+        \} catch (\\Exception \$e) \{
+            throw new CouldNotSaveException(
+                __('The data was unable to be saved. Please try again.')
+            );
+        \}
+        return \$model;
+    \}
+
+    /**
+     * \{@inheritdoc\}
+     */
+    public function get(\$$fields_list(identity))
+    \{
+        if (!isset(\$this->data\[\$$fields_list(identity)\])) \{
+            \$model = \$this->[string tolower $model_template]Factory->create();
+
+            \$model->load(\$$fields_list(identity));
+
+            if (!\$model->get[get_camel_case $fields_list(identity)]()) \{
+                throw new NoSuchEntityException(
+                    __('The model with the \"%1\" ID wasn\\'t found. Verify the ID and try again.', \$$fields_list(identity))
+                );
+            \}
+            \$this->data\[\$$fields_list(identity)\] = \$model;
+        \}
+        return \$this->data\[\$$fields_list(identity)\];
+    \}
+
+    /**
+     * \{@inheritdoc\}
+     */
+    public function delete(${model_template}Interface \$model)
+    \{
+        try \{
+            \$this->[string tolower $model_template]Resource->delete(\$model);
+            unset(\$this->data\[\$model->get[get_camel_case $fields_list(identity)]()\]);
+        \} catch (ValidatorException \$e) \{
+            throw new CouldNotSaveException(__(\$e->getMessage()));
+        \} catch (\\Exception \$e) \{
+            throw new CouldNotDeleteException(__('The \"%1\" model couldn\\'t be removed.', \$model->get[get_camel_case $fields_list(identity)]()));
+        \}
+        return true;
+    \}
+
+    /**
+     * \{@inheritdoc\}
+     */
+    public function deleteById(\$$fields_list(identity))
+    \{
+        \$model = \$this->get(\$$fields_list(identity));
+        \$this->delete(\$model);
+        return true;
+    \}
+\}

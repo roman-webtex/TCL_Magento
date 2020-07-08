@@ -488,8 +488,21 @@ namespace eval system::windows {
     }
 
     proc get_model_window { {model_name ""} } {
-	global fields_no
-	set fields_no 0
+	global field_no
+	global fields_list
+	global field_types
+	global create_model_name
+	global create_model_table_name
+	
+	set field_no 0
+	array unset fields_list
+	set create_model_name "Vendor_ModuleName_Model_ModelName"
+	set create_model_table_name "vendor_module_model"
+
+	if {[llength $::system::magento::di_fields_type] == 0} {
+	    puts pusto
+	    set ::system::magento::di_fields_type [::system::magento::get_db_field_types]
+	}
 	
 	toplevel .model_window
 	wm title .model_window "Enter values"
@@ -505,41 +518,111 @@ namespace eval system::windows {
 	frame .model_window.paned.left.model_name
 	frame .model_window.paned.right.model_name
 	pack .model_window.paned.left.model_name -side top -anchor w -padx 4 -pady 4
-	pack .model_window.paned.right.model_name -side top -anchor w -padx 4 -pady 4
+	pack .model_window.paned.right.model_name -side top -anchor w -padx 4 -pady 4 -expand 1 -fill x
 	ttk::label .model_window.paned.left.model_name.label -text "Model name :" -padding "1 1 1 1"
-	ttk::entry .model_window.paned.right.model_name.value -textvariable model_name
+	ttk::entry .model_window.paned.right.model_name.value -textvariable create_model_name -width 45
+	pack .model_window.paned.left.model_name.label
+	pack .model_window.paned.right.model_name.value
 
 	# model table
 	frame .model_window.paned.right.model_table
 	frame .model_window.paned.left.model_table
 	pack .model_window.paned.left.model_table -side top -anchor w -padx 4 -pady 4
-	pack .model_window.paned.right.model_table -side top -anchor w -padx 4 -pady 4
+	pack .model_window.paned.right.model_table -side top -anchor w -padx 4 -pady 4 -expand 1 -fill x
 	ttk::label .model_window.paned.left.model_table.label -text "Model Table name :" -padding "1 1 1 1"
-	ttk::entry .model_window.paned.right.model_table.value -textvariable model_table_name
-	ttk::label .model_window.paned.left.label -text "Fields :" -padding "1 1 1 1"
-	pack .model_window.paned.left.model_name.label
-	pack .model_window.paned.right.model_name.value
+	ttk::entry .model_window.paned.right.model_table.value -textvariable create_model_table_name -width 45
 	pack .model_window.paned.left.model_table.label
 	pack .model_window.paned.right.model_table.value
-	pack .model_window.paned.left.label
 
-	set field_$fields_no ""
-	frame .model_window.field_$fields_no
-	pack .model_window.field_$fields_no -side top -anchor nw -padx 4 -pady 4
-	ttk::entry .model_window.field_$fields_no.name -textvariable field_$fields_no
-	pack .model_window.field_$fields_no.name -side top -anchor nw -padx 4 -pady 4
+	set fields_list($field_no.name) "entity_id"
+	set fields_list($field_no.type) "int"
+	set fields_list($field_no.size) 10
+	set fields_list($field_no.null) 1
+	set fields_list($field_no.default) ""
 
-
+	frame .model_window.field
+	pack .model_window.field -side top -anchor nw -padx 4 -pady 4
+	ttk::label .model_window.field.name -text "Field Name" -width 30
+	ttk::label .model_window.field.type -text "Type" -width 9 
+	ttk::label .model_window.field.size -text "Size" -width 5
+	ttk::label .model_window.field.null -text "not Null" -width 10
+	ttk::label .model_window.field.default -text "Default" -width 15
+	
+	grid .model_window.field.name -row 0 -column 0 -padx 5 -pady 1
+	grid .model_window.field.type -row 0 -column 1 -padx 5 -pady 1
+	grid .model_window.field.size -row 0 -column 2 -padx 5 -pady 1
+	grid .model_window.field.null -row 0 -column 3 -padx 1 -pady 1
+	grid .model_window.field.default -row 0 -column 4 -padx 5 -pady 1
+	
+	frame .model_window.field_$field_no
+	pack .model_window.field_$field_no -side top -anchor nw -padx 4 -pady 4
+	ttk::entry .model_window.field_$field_no.name -textvariable fields_list($field_no.name) -width 30
+	ttk::combobox .model_window.field_$field_no.type -textvariable fields_list($field_no.type) -width 9 -values $::system::magento::di_fields_type
+	ttk::entry .model_window.field_$field_no.size -textvariable fields_list($field_no.size) -width 5
+	ttk::checkbutton .model_window.field_$field_no.null -variable fields_list($field_no.null) -width 5
+	ttk::entry .model_window.field_$field_no.default -textvariable fields_list($field_no.default) -width 20
+	
+	grid .model_window.field_$field_no.name -row $field_no -column 0 -padx 1 -pady 1
+	grid .model_window.field_$field_no.type -row $field_no -column 1 -padx 1 -pady 1
+	grid .model_window.field_$field_no.size -row $field_no -column 2 -padx 1 -pady 1
+	grid .model_window.field_$field_no.null -row $field_no -column 3 -padx 1 -pady 1
+	grid .model_window.field_$field_no.default -row $field_no -column 4 -padx 1 -pady 1
+	
 	frame .model_window.buttonframe
 	pack .model_window.buttonframe -side top -anchor e -padx 4 -pady 4
-	ttk::button .model_window.buttonframe.button -text "Run" -command { set done 1 } -width 15
+
+	ttk::button .model_window.buttonframe.button_add -text "Add Field" -command { ::system::windows::add_model_field } -width 15
+	pack .model_window.buttonframe.button_add -padx 4 -pady 4
+
+	ttk::button .model_window.buttonframe.button -text "Create Model" -command { set done 1 } -width 15
 	pack .model_window.buttonframe.button -padx 4 -pady 4
 
 	centre_window .model_window
 
 	vwait done
-
 	destroy .model_window
+
+	set module_dir [::system::config::get_magento_dir]/app/code/[regsub -- _ [regsub -- {_Model.*$} $create_model_name ""] /]
 	
+	if {[file exists $module_dir/etc/module.xml] == 0} {
+	    set reply [tk_dialog .foo "Magento Module" "The Module named '[regsub -- {_Model.*$} $create_model_name ""]' does not exist. Create from template?" questhead 0 Yes No Cancel]
+	    switch -- $reply {
+		0 {
+		    puts Create
+		}
+		2 {
+		    puts Cancel
+		    return
+		}
+	    }
+	}
+	::system::magento::create_model $create_model_name $create_model_table_name
+    }
+
+    proc add_model_field {} {
+	global field_no
+	global fields_list
+	
+	incr field_no
+	set fields_list($field_no.name) ""
+	set fields_list($field_no.type) ""
+	set fields_list($field_no.size) ""
+	set fields_list($field_no.null) 0
+	set fields_list($field_no.default) ""
+
+	frame .model_window.field_$field_no
+	pack .model_window.field_$field_no -side top -before .model_window.buttonframe -padx 4 -pady 4
+
+	ttk::entry .model_window.field_$field_no.name -textvariable fields_list($field_no.name) -width 30
+	ttk::combobox .model_window.field_$field_no.type -textvariable fields_list($field_no.type) -width 9 -values $::system::magento::di_fields_type
+	ttk::entry .model_window.field_$field_no.size -textvariable fields_list($field_no.size) -width 5
+	ttk::checkbutton .model_window.field_$field_no.null -variable fields_list($field_no.null) -width 5
+	ttk::entry .model_window.field_$field_no.default -textvariable fields_list($field_no.default) -width 20
+	
+	grid .model_window.field_$field_no.name -row $field_no -column 0 -padx 1 -pady 1
+	grid .model_window.field_$field_no.type -row $field_no -column 1 -padx 1 -pady 1
+	grid .model_window.field_$field_no.size -row $field_no -column 2 -padx 1 -pady 1
+	grid .model_window.field_$field_no.null -row $field_no -column 3 -padx 1 -pady 1
+	grid .model_window.field_$field_no.default -row $field_no -column 4 -padx 1 -pady 1
     }
 }
