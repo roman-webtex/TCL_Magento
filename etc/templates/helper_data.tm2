@@ -1,0 +1,6 @@
+<?php$comment_text
+namespace $vendor\\$module\\Helper;
+
+class Data extends \\Magento\\Framework\\App\\Helper\\AbstractHelper
+{
+}

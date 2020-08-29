@@ -3,11 +3,11 @@ namespace $vendor\\$module\\Api;
 
 interface ${model_template}RepositoryInterface
 \{
-    public function save(\\$vendor\\$module\\Api\\Data\\${model_template}Interface \$object);
+    public function save(\\$vendor\\$module\\Api\\Data\\${model_template}Interface \$model);
 
     public function get(\$$fields_list(identity));
 
-    public function delete(\\$vendor\\$module\\Api\\Data\\${model_template}Interface \$object);
+    public function delete(\\$vendor\\$module\\Api\\Data\\${model_template}Interface \$model);
 
     public function deleteById(\$$fields_list(identity));
 \}

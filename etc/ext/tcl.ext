@@ -1,0 +1,11 @@
+# tcl syntax highlighting file
+set keywords(function) {string regsub dict array tolower toupper totitle search get trim trimleft trimright lindex split llength expr lappend append incr list open close read exists match exec file}
+set keywords(command) { constructor use namespace eval unset set puts }
+set keywords(tag) {}
+set keywords(constant) {null false true variable global}
+set keywords(control) {if case else elseif for foreach return while switch exit break continue proc}
+set keywords(string) {}
+set keywords(text) {}
+set keywords(comment) {}
+set keywords(brace) {}
+set keywords(variable) {($.?)}

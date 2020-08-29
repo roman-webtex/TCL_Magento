@@ -1,0 +1,4 @@
+<?php$comment_text
+\\Magento\\Framework\\Component\\ComponentRegistrar::register(
+    \\Magento\\Framework\\Component\\ComponentRegistrar::MODULE, '${vendor}_${module}', __DIR__
+);

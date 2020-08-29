@@ -10,9 +10,9 @@ set load_path [ file dirname [ file normalize [info script] ] ]
 
 proc package_load { module err_message } {
     if { [ catch { package require $module } error ]} {
-	puts $error
-	puts $err_message
-	exit
+        puts $error
+        puts $err_message
+        exit
     }
 }
 

@@ -34,7 +34,7 @@ class ${model_template}Repository implements \\$vendor\\$module\\Api\\${model_te
     /**
      * \{@inheritdoc\}
      */
-    public function save(${model_template}Interface \$model)
+    public function save(\\$vendor\\$module\\Api\\Data\\${model_template}Interface \$model)
     \{
         if (\$model->get[get_camel_case $fields_list(identity)]()) \{
             \$model = \$this->get(\$model->get[get_camel_case $fields_list(identity)]())->addData(\$model->getData());
@@ -76,7 +76,7 @@ class ${model_template}Repository implements \\$vendor\\$module\\Api\\${model_te
     /**
      * \{@inheritdoc\}
      */
-    public function delete(${model_template}Interface \$model)
+    public function delete(\\$vendor\\$module\\Api\\Data\\${model_template}Interface \$model)
     \{
         try \{
             \$this->[string tolower $model_template]Resource->delete(\$model);

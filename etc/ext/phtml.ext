@@ -5,7 +5,7 @@ set keywords(function) { break case class continue declare default define do ech
 }
 
 set keywords(command) { $this parent __construct use namespace self in_array array const try catch as unset }
-set keywords(tag) { <div </div <p <p> </p> <body </body> <html </html> }
+set keywords(tag) {name type id value action method}
 set keywords(constant) { __FILE__ __METHOD__ __DIR__ _SERVER }
 set keywords(control) {}
 set keywords(string) {}
