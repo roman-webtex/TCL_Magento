@@ -1,3 +1,6 @@
-./var/*
+var/*
+projects/*
+var/out/*
+app/.#*
 !./var/read.me
 !./var/backup/read.me

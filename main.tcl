@@ -1,6 +1,9 @@
 #!/bin/env wish
 #
-# magento helper main module
+# Tcl/Tk Magento Helper                
+# Distrubuted under GPL               
+# Copyright (c) "Roman Dmytrenko", 2020       
+# Author: Roman Dmytrenko roman.webtex@gmail.com 
 #
 
 array set editor {}
@@ -39,14 +42,17 @@ foreach { filename } [ glob -nocomplain $load_path/app/*.tcl] {
     source $filename
 }
 
-foreach { filename } [ glob -nocomplain $load_path/modules/*.tcl] {
-    source $filename
-}
 
 ::system::config::load_config
 ::system::config::get_highlight_groups
 ::system::windows::main_window
-update
+
+foreach { filename } [ glob -nocomplain $load_path/modules/*.tcl] {
+    update
+    source $filename
+    .mainMenu.magento.modules add command -label "[::system::[lindex [split [file tail $filename] . ] 0]::get_label]" -underline 0 -command {"::system::[lindex [split [file tail $filename] . ] 0]::run"}
+}
+
 ::system::windows::open_magento
 
 

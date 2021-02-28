@@ -1,3 +1,8 @@
+# Tcl/Tk Magento Helper                
+# Distrubuted under GPL               
+# Copyright (c) "Roman Dmytrenko", 2020       
+# Author: Roman Dmytrenko roman.webtex@gmail.com 
+#
 # magento common command
 
 namespace eval system::magento {
@@ -162,10 +167,12 @@ namespace eval system::magento {
     proc open_module_from_menu {} {
         global project
         if {[set file_name [::system::utils::open_file "Select module registration.php" [::system::config::get_magento_dir] "registration.php" ]] != ""} {
-            #            ::system::windows::show_module_window $file_name
             set module_name [get_module_name_from_registration $file_name]
-            puts $module_name
-            set project([regsub -all -- "_" $module_name "."]) $module_name
+            if {[array get project magento_path] == ""} {
+                set project(magento_path) [::system::config::get_magento_dir]
+            }
+            set project(module.$module_name) $module_name
+            set project(active) $module_name
             .root.status.lab configure -text "[ mc "Magento root set to " ][ ::system::config::get_magento_dir ];  Active module are $module_name"
         }
     }
@@ -197,7 +204,11 @@ namespace eval system::magento {
         set result {}
         set di_file [::system::config::get_magento_dir]/app/etc/di.xml
         set file_data [::system::utils::get_file_content $di_file]
-
+        
+        if {$file_data == ""} {
+            return result            
+        }
+        
         set doc [dom parse $file_data]
         set root [$doc documentElement]
         set node [$root selectNodes {/config/type/arguments/argument[@name='typeFactories']}]
@@ -665,7 +676,12 @@ namespace eval system::magento {
         eval "puts $fp \"${tpl_data}\""
         close $fp
 
-        set project($vendor.$module) ${vendor}_${module}
+        if {[array get project magento_path] == ""} {
+            set project(magento_path) [::system::config::get_magento_dir]
+        }
+        
+        set project(module.${vendor}_${module}) ${vendor}_${module}
+        set project(active) ${vendor}_${module}
         .root.status.lab configure -text "[ mc "Magento root set to " ][ ::system::config::get_magento_dir ];  Active module are ${vendor}_${module}"
 
         ::system::windows::remove_progress
@@ -685,5 +701,11 @@ namespace eval system::magento {
             append result "" [string totitle $word]
         }
         return $result
+    }
+
+    proc set_active_module {module_name} {
+        global project
+        set project(active) $module_name
+        .root.status.lab configure -text "[ mc "Magento root set to " ][ ::system::config::get_magento_dir ];  Active module are $module_name"
     }
 }

@@ -1,3 +1,8 @@
+# Tcl/Tk Magento Helper                
+# Distrubuted under GPL               
+# Copyright (c) "Roman Dmytrenko", 2020       
+# Author: Roman Dmytrenko roman.webtex@gmail.com 
+#
 # window utilites
 #
 namespace eval system::windows {
@@ -28,6 +33,7 @@ namespace eval system::windows {
     proc main_window {} {
         global editor
 	global window_radio
+        global project
 
         set editor(console) 0
         
@@ -76,6 +82,7 @@ namespace eval system::windows {
         menu .mainMenu.file -tearoff 0
         menu .mainMenu.window -tearoff 0
         menu .mainMenu.magento -tearoff 0
+        menu .mainMenu.plugins -tearoff 0
 
         # main menu file
         menu .mainMenu.file.create -tearoff 0
@@ -83,6 +90,7 @@ namespace eval system::windows {
         
         menu .mainMenu.file.open -tearoff 0
         .mainMenu.file.open add command -label [ mc "File" ] -command {::system::windows::edit_file dep_ident [system::utils::open_file "Open..." [pwd] "*"]}
+        .mainMenu.file.open add command -label [ mc "Project" ] -command system::windows::open_project_from_menu
         .mainMenu.file.open add command -label [ mc "Magento module" ] -command system::magento::open_module_from_menu
 
         .mainMenu.file add cascade -label [ mc "Create..." ] -underline 0 -menu .mainMenu.file.create
@@ -110,6 +118,8 @@ namespace eval system::windows {
         .mainMenu.magento.setup add command -label [ mc ":upgrade" ] -command system::magento::setup_upgrade
         .mainMenu.magento.setup add command -label [ mc ":di:compile" ] -command system::magento::setup_di_compile
         .mainMenu.magento.setup add command -label [ mc ":static-content:deploy" ] -command system::magento::setup_deploy
+
+        menu .mainMenu.magento.modules -tearoff 0
         
         .mainMenu.magento add cascade -label [ mc "Setup" ] -underline 0 -menu .mainMenu.magento.setup
         .mainMenu.magento add cascade -label [ mc "Admin" ] -underline 0 -menu .mainMenu.magento.admin
@@ -118,9 +128,12 @@ namespace eval system::windows {
         .mainMenu.magento add command -label [ mc "Add Admin GridView for Model" ] -underline 0 -command {::system::magento::add_admin_gridview_model}        
         .mainMenu.magento add separator
         .mainMenu.magento add command -label [ mc "Open Magento directory" ] -underline 0 -command  ::system::config::select_magento_dir
-        
+        .mainMenu.magento add separator
+        .mainMenu.magento add cascade -label [ mc "Project Modules" ] -underline 0 -menu .mainMenu.magento.modules
+
         .mainMenu add cascade -label [ mc "File" ] -underline 0 -menu .mainMenu.file
         .mainMenu add cascade -label [ mc "Magento" ] -underline 0 -menu .mainMenu.magento
+        .mainMenu add cascade -label [ mc "Plugins" ] -underline 0 -menu .mainMenu.magento.modules
         .mainMenu add cascade -label [ mc "Window" ] -underline 0 -menu .mainMenu.window
 
         restore_session
@@ -131,6 +144,13 @@ namespace eval system::windows {
         bind .root.pnd.notebook <<NotebookTabChanged>> {::system::utils::handle_tab_changed}
         bind .root.pnd.left.top <<TreeviewOpen>> {::system::utils::fill_directory_tree [%W focus]}
         bind .root.pnd.left.top <Double-1> {::system::utils::handle_treeview_select [%W focus]}
+    }
+
+    proc open_project_from_menu {} {
+        set project_file_name [system::utils::open_file "Open Project" $::load_path/etc/projects/ "*.tmproj"]
+        if {$project_file_name != ""} {
+            ::system::config::load_project $project_file_name
+        }
     }
 
     proc tooltip {text posx posy} {
@@ -220,9 +240,14 @@ namespace eval system::windows {
     }
 
     proc restore_session {} {
+        global project
         set session [::system::config::restore_session]
         foreach item [split $session " "]  {
-            ::system::windows::edit_file dep_ident [lindex [split $item :] 0] [lindex [split $item :] 1] 
+            if {[lindex [split $item :] 0] != "current_project"} {
+                ::system::windows::edit_file dep_ident [lindex [split $item :] 0] [lindex [split $item :] 1]
+            } else {
+                ::system::config::load_project [lindex [split $item :] 1]
+            }
         }
     }
 
@@ -635,11 +660,18 @@ namespace eval system::windows {
         global field_types
         global create_model_name
         global create_model_table_name
+        global project
         
         set field_no 0
         array unset fields_list
-        set create_model_name "Vendor_ModuleName_Model_ModelName"
-        set create_model_table_name "vendor_module_model"
+
+        if {$project(active) != ""} {
+            set create_model_name "${project(active)}_Model_ModelName"
+            set create_model_table_name [string tolower "${project(active)}_modelname"]
+        } else {
+            set create_model_name "Vendor_ModuleName_Model_ModelName"
+            set create_model_table_name "vendor_module_modelname"
+        }
 
         if {[llength $::system::magento::di_fields_type] == 0} {
             set ::system::magento::di_fields_type [::system::magento::get_db_field_types]
@@ -800,15 +832,34 @@ namespace eval system::windows {
     proc admin_gridview_model_window {} {
         global project
 
-        set module_list {}
+        set module_list ""
         
-        foreach module_index [array names project] {
-            lappend $module_list $project($module_index)    
+        foreach module_index [array names project module.*] {
+            lappend module_list $project($module_index)    
         }
-        
+
         if {$module_list == ""} {
             tk_messageBox -title "No module" -message "Please, select working module from menu File -> Open... -> Magento module" -type ok
             return
         }
+
+        foreach module [list $module_list] {
+            set models_dir [::system::config::get_magento_dir]/app/code/[regsub -- _ $module /]/Api/Data/
+            foreach model_path [glob -nocomplain $models_dir*Interface.php] {
+                set project(module_interface.$module.[regsub -all -- "Interface.php" [file tail $model_path] ""]) $model_path
+                set project(module_model.$module.[regsub -all -- "Interface.php" [file tail $model_path] ""]) [::system::config::get_magento_dir]/app/code/[regsub -- _ $module /]/Model/[regsub -all -- "Interface" [file tail $model_path] ""]
+            }
+        }
+
+        toplevel .gridview_window
+        wm title .gridview_window "Create Admin Gridview"
+        wm transient .gridview_window .
+        ttk::panedwindow .model_window.paned -orient horizontal
+        pack .model_window.paned -fill both -expand 1
+        ttk::frame .model_window.paned.left 
+        ttk::frame .model_window.paned.right 
+        .model_window.paned add .model_window.paned.left
+        .model_window.paned add .model_window.paned.right
+      
     }
 }

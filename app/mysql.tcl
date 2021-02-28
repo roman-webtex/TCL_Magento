@@ -1,3 +1,8 @@
+# Tcl/Tk Magento Helper                
+# Distrubuted under GPL               
+# Copyright (c) "Roman Dmytrenko", 2020       
+# Author: Roman Dmytrenko roman.webtex@gmail.com 
+#
 #
 # Mysql Adapter
 #

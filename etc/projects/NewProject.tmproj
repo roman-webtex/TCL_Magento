@@ -1,0 +1,9 @@
+module_interface.Magenmagic_Cpd.Fontset|/home/roman/work/docker/parker/compose/src/app/code/Magenmagic/Cpd/Api/Data/FontsetInterface.php
+module_interface.Magenmagic_Cpd.Colorset|/home/roman/work/docker/parker/compose/src/app/code/Magenmagic/Cpd/Api/Data/ColorsetInterface.php
+active|Magenmagic_Cpd
+module_model.Magenmagic_Cpd.Colorset|/home/roman/work/docker/parker/compose/src/app/code/Magenmagic/Cpd/Model/Colorset.php
+module_model.Magenmagic_Cpd.Fontset|/home/roman/work/docker/parker/compose/src/app/code/Magenmagic/Cpd/Model/Fontset.php
+project_name|NewProject.tmproj
+module.Magenmagic_Cpd|Magenmagic_Cpd
+magento_path|/home/roman/work/docker/parker/compose/src
+

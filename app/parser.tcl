@@ -1,5 +1,9 @@
-# file parser
+# Tcl/Tk Magento Helper                
+# Distrubuted under GPL               
+# Copyright (c) "Roman Dmytrenko", 2020       
+# Author: Roman Dmytrenko roman.webtex@gmail.com 
 #
+# file parser
 #
 namespace eval system::parser {
 
@@ -10,6 +14,8 @@ namespace eval system::parser {
         set file_data [string map {"<?php" ""} [regsub -all {\s+} [::system::utils::get_file_content $filename] " "]]
         regsub -all {/\*.*?\*/} $file_data {} file_data
         set file_data [string map {";" ";\n" "{" "\n{\n" "}" "\n}\n" } $file_data ]
+
+        puts $file_data
 
         set lineno 1;
 
@@ -42,8 +48,9 @@ namespace eval system::parser {
                 }
                 #puts [::system::utils::minus $line "use"]
             } elseif {$1 == "function"} {
-                if {$2 == "__construct("} {
-                    set constructor [string trimright [lindex [split $line "("] 1] " )"]
+puts [string trim [lindex [split $2 "("] 0]]
+                if {[string trim [lindex [split $2 "("] 0]] == "__construct"} {
+                    set constructor [string trim [string trimright [lindex [split $line "("] 1] ")"]]
                     foreach classline [split $constructor ","] {
                         set class [lindex [split [string trim [lindex [split $classline "="] 0]] " "] 0]
                         set variable [lindex [split [string trim [lindex [split $classline "="] 0]] " "] 1]
@@ -69,5 +76,6 @@ namespace eval system::parser {
 
             incr lineno
         }
+        parray parsed_data
     }
 }

@@ -1,4 +1,10 @@
+# Tcl/Tk Magento Helper                
+# Distrubuted under GPL3               
+# Copyright (c) "Roman Dmytrenko", 2020       
+# Author: Roman Dmytrenko roman.webtex@gmail.com 
+#
 # common utils
+#
 namespace eval system::utils {
 
     proc fill_directory_tree { { entry {} } } {
@@ -60,8 +66,7 @@ namespace eval system::utils {
         .root.status.position configure -text "$line_position Line: $current_line of $total_lines"
 
         if {$key == "Control_L"} {
-
-            
+         
             set position [$entry index insert]
             set start [$entry search -backwards -- " " $position]
             set end  [$entry search " " $position]
@@ -269,20 +274,20 @@ namespace eval system::utils {
 			    break
 			}
                     } elseif {$char == "\"" } {
-                        set tag_end [add_multiline_tag $entry text {[^\\]\"} $current_line.$x 0 2]
+                        set tag_end [add_multiline_tag $entry text {[^\\]\"} $current_line.[expr $x - 1] 0 2]
 			set x [lindex [split $tag_end . ] 1]
-			if {[lindex [split $tag_end .] 0] > $current_line} {
+                        if {[lindex [split $tag_end .] 0] > $current_line} {
 			    set current_line [expr [lindex [split $tag_end .] 0] -1 ]
 			    break
 			}
                     } elseif {$char == "'"} {
-                        set tag_end [add_multiline_tag $entry string {[^\\]'} $current_line.$x 0 2]
+                        set tag_end [add_multiline_tag $entry string {[^\\]'} $current_line.[expr $x - 1] 0 2]
 			set x [lindex [split $tag_end . ] 1]
 			if {[lindex [split $tag_end .] 0] > $current_line} {
 			    set current_line [expr [lindex [split $tag_end .] 0] -1]
 			    break
 			}
-                    } elseif {[ string first $char "<ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_$/*?" ] != -1} {
+                    } elseif {[ string first $char "<ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_$/*?\\" ] != -1} {
                         if {$word == ""} {
                             set start_pos $x
                         }
@@ -460,6 +465,7 @@ namespace eval system::utils {
 
     proc my_exit {} {
         global editor
+        global project
         set reply 100
         set session {}
         
@@ -481,6 +487,11 @@ namespace eval system::utils {
             }
 
             lappend session $editor($item,file_path):[$item index insert]
+        }
+
+        if {($project(project_name) != "") && ([tk_dialog .foo "Save project" "Save project before close?" questhead 0 Yes No] == 0)} {
+            ::system::config::save_project
+            lappend session current_project:$project(project_name)
         }
         ::system::config::save_session $session
         exit

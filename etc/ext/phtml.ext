@@ -1,4 +1,10 @@
+# Tcl/Tk Magento Helper                
+# Distrubuted under GPL               
+# Copyright (c) "Roman Dmytrenko", 2020       
+# Author: Roman Dmytrenko roman.webtex@gmail.com 
+#
 # php syntax highlighting file
+
 set keywords(function) { break case class continue declare default define do echo else elseif endif endwhile extends false \
     for foreach function global if include include_once new null private protected public require require_once return static \
     switch true while exit constant implements create \

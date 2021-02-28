@@ -1,4 +1,10 @@
+# Tcl/Tk Magento Helper                
+# Distrubuted under GPL               
+# Copyright (c) "Roman Dmytrenko", 2020       
+# Author: Roman Dmytrenko roman.webtex@gmail.com 
+#
 # an empty extension highlighting file
+
 set keywords(function) {}
 set keywords(command) {}
 set keywords(string) {}
