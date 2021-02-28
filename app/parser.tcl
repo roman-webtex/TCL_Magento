@@ -15,8 +15,6 @@ namespace eval system::parser {
         regsub -all {/\*.*?\*/} $file_data {} file_data
         set file_data [string map {";" ";\n" "{" "\n{\n" "}" "\n}\n" } $file_data ]
 
-        puts $file_data
-
         set lineno 1;
 
         foreach line [split $file_data "\n"] {
@@ -48,7 +46,6 @@ namespace eval system::parser {
                 }
                 #puts [::system::utils::minus $line "use"]
             } elseif {$1 == "function"} {
-puts [string trim [lindex [split $2 "("] 0]]
                 if {[string trim [lindex [split $2 "("] 0]] == "__construct"} {
                     set constructor [string trim [string trimright [lindex [split $line "("] 1] ")"]]
                     foreach classline [split $constructor ","] {
@@ -76,6 +73,5 @@ puts [string trim [lindex [split $2 "("] 0]]
 
             incr lineno
         }
-        parray parsed_data
     }
 }

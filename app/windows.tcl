@@ -144,6 +144,8 @@ namespace eval system::windows {
         bind .root.pnd.notebook <<NotebookTabChanged>> {::system::utils::handle_tab_changed}
         bind .root.pnd.left.top <<TreeviewOpen>> {::system::utils::fill_directory_tree [%W focus]}
         bind .root.pnd.left.top <Double-1> {::system::utils::handle_treeview_select [%W focus]}
+        bind .root.pnd.left.top <Return> {::system::utils::handle_treeview_select [%W focus]}
+        
     }
 
     proc open_project_from_menu {} {

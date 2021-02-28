@@ -691,6 +691,10 @@ namespace eval system::utils {
     proc handle_autocomplete { entry key } {
     }
 
+    # get_func_var_list
+    # creating autocomplere popup after ->
+    #
+    # TODO: add autocomplete after function:  getSomeThing()->
     proc get_func_var_list { entry pattern } {
         global editor
         global parsed_data
@@ -700,7 +704,7 @@ namespace eval system::utils {
         }
 
         set keyword [$entry get [$entry index "insert-3c wordstart"] [$entry index "insert-2c"]]
-
+        
         if {[string trim $keyword] == ""} {
             set pos [$entry search -backwards -exact "$" [$entry index insert]]
             set keyword [$entry get "$pos+1c" "$pos+1c wordend"]
@@ -739,9 +743,8 @@ namespace eval system::utils {
             set class [::system::magento::get_file_by_class_name $parent]
             if {$class != ""} {
                 set parent_list [get_file_data $class]
-
                 set vars [concat $vars [lindex $parent_list 1]]
-                set func [concat $func [lindex $parent_list 3]]
+                set func [concat $func [lindex $parent_list 2]]
                 set parent [lindex $parent_list 3]
             } else {
                 set parent ""
@@ -750,34 +753,32 @@ namespace eval system::utils {
 
         menu .autocomplete -tearoff 0 -relief flat -background yellow -activebackground magenta1 -activeborderwidth 0
 
-        # return
-
         set pop_items {}
-        
+
         foreach item $vars {
             set word [lindex [split [lindex $item 0] "$"] 1]
+            set type [string trim [lindex [split [lindex $item 0] " "] 0]]
+            if { $keyword != "this" && ($type == "protected" || $type == "private")} {
+                continue
+            }
             .autocomplete add command -label [lindex $item 0] -command "$entry insert [$entry index insert] $word"
-            #lappend pop_items [lindex [split [lindex $item 0] " "] 1]
-            #::system::windows::popup_add [lindex [split [lindex $item 0] " "] 1]
         }
 
-        .autocomplete add separator
+        if {[.autocomplete index end] > 0} {
+            .autocomplete add separator
+        }
 
         foreach item $func {
             set funcname [lindex $item 0]
             set func_line [lindex $item 1]
             set func_file [lindex $item 2]
-            if {$func_line != ""} {
+            if {$func_line != "" && [lindex [split $funcname " "] 2] != "__construct()"} {
                 .autocomplete add command -label [lindex $item 0] -command "::system::utils::insert_function $entry {$funcname} $func_line $func_file"
-                #::system::windows::popup_add [lindex [split [lindex $item 0] " "] 2]
-                #lappend pop_items [lindex [split [lindex $item 0] " "] 2]
             }
         }
 
-        #::system::windows::get_popup $entry
-        #::system::windows::popup_add $pop_items        
         if {[.autocomplete index end] > 0} {
-            tk_popup .autocomplete 350 100
+            tk_popup .autocomplete +350 +100
         }
     }
 
@@ -788,8 +789,12 @@ namespace eval system::utils {
             destroy .autocomplete
         }
 
-        set keyword [string trim [$entry get [$entry search -exact -backwards " " [$entry index insert-2chars]] [$entry index insert-2chars]]]
+        set keyword [string trim [$entry get [$entry search -exact -backwards " " [$entry index insert-2c]] [$entry index insert-2c]]]
         menu .autocomplete -tearoff 0 -relief flat -background yellow -activebackground magenta1 -activeborderwidth 0
+        
+        if {[string first "\n" $keyword] != -1} {
+            set keyword [string trim [lindex [split $keyword "\n"] 1]]
+        }
 
         if {$keyword == {self}} {
             set const $editor($entry.constants)
@@ -809,11 +814,6 @@ namespace eval system::utils {
             .autocomplete add command -label [lindex $item 0] -command " $entry insert [$entry index insert] $word "
         }
 
-        foreach item $vars {
-            set word [lindex [split [lindex $item 0] "$"] 1]
-            .autocomplete add command -label [lindex $item 0] -command " $entry insert [$entry index insert] $word "
-        }
-
         .autocomplete add separator
 
         foreach item $func {
@@ -826,7 +826,7 @@ namespace eval system::utils {
         }
 
         if {[.autocomplete index end] > 0} {
-            tk_popup .autocomplete 350 100
+            tk_popup .autocomplete +350 +100
         }
     }
 
