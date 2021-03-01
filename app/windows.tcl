@@ -56,10 +56,6 @@ namespace eval system::windows {
         ttk::scrollbar .root.scrollbarx -orient horizontal -takefocus 1
         pack .root.scrollbarx -in .root.pnd.notebook -side bottom -fill x
 
-	# for lineno
-	#canvas .root.pnd.canvas -width 50 -highlightthickness 0 -background white
-	#.root.pnd add .root.pnd.canvas
-
         .root.pnd add .root.pnd.notebook
         ttk::notebook::enableTraversal .root.pnd.notebook
         
@@ -67,8 +63,8 @@ namespace eval system::windows {
         .root.pnd.left.top heading #0 -text [ mc "Magento root directory" ]
 
         ttk::treeview .root.pnd.left.bottom -padding "1 0 0 1" -columns {file_name line_no} -displaycolumns {} -selectmode browse
-        .root.pnd.left add .root.pnd.left.top
-        .root.pnd.left add .root.pnd.left.bottom
+        .root.pnd.left add .root.pnd.left.top -weight 1
+        .root.pnd.left add .root.pnd.left.bottom -weight 2
 
         ttk::frame .root.status
         ttk::label .root.status.lab -text " " -anchor w
@@ -145,7 +141,6 @@ namespace eval system::windows {
         bind .root.pnd.left.top <<TreeviewOpen>> {::system::utils::fill_directory_tree [%W focus]}
         bind .root.pnd.left.top <Double-1> {::system::utils::handle_treeview_select [%W focus]}
         bind .root.pnd.left.top <Return> {::system::utils::handle_treeview_select [%W focus]}
-        
     }
 
     proc open_project_from_menu {} {

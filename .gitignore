@@ -2,5 +2,6 @@ var/*
 projects/*
 var/out/*
 app/.#*
-!./var/read.me
-!./var/backup/read.me
+etc/system.cfg
+!var/read.me
+!var/backup/read.me

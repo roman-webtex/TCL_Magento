@@ -205,10 +205,10 @@ namespace eval system::magento {
         set di_file [::system::config::get_magento_dir]/app/etc/di.xml
         set file_data [::system::utils::get_file_content $di_file]
         
-        if {$file_data == ""} {
+        if {$file_data == "" || $file_data == false} {
             return result            
         }
-        
+
         set doc [dom parse $file_data]
         set root [$doc documentElement]
         set node [$root selectNodes {/config/type/arguments/argument[@name='typeFactories']}]

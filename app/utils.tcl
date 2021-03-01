@@ -7,6 +7,11 @@
 #
 namespace eval system::utils {
 
+    proc get_window_position { w } {
+        if {[winfo exist $w] == 1} {
+        }
+    }
+
     proc fill_directory_tree { { entry {} } } {
         if { $entry == {} } {
             set dir [ ::system::config::get_magento_dir ]
@@ -764,7 +769,7 @@ namespace eval system::utils {
             .autocomplete add command -label [lindex $item 0] -command "$entry insert [$entry index insert] $word"
         }
 
-        if {[.autocomplete index end] > 0} {
+        if {[.autocomplete index last] != [.autocomplete index none]} {
             .autocomplete add separator
         }
 
@@ -778,7 +783,7 @@ namespace eval system::utils {
         }
 
         if {[.autocomplete index end] > 0} {
-            tk_popup .autocomplete +350 +100
+            tk_popup .autocomplete [expr [winfo rootx .] + 350] [expr [winfo rooty .] + 100]
         }
     }
 
